@@ -5,6 +5,9 @@
 #include <iostream>
 #include <vector>
 
+template <typename T>
+concept SliceArg = std::same_as<T, std::initializer_list<int>>;
+
 template <typename T, size_t Order>
 class TensorView;
 
@@ -84,51 +87,67 @@ public:
 		return data_[LinearIndex(indices...)];
 	}
 
-	template <RawSliceArg S1, RawSliceArg S2 = std::array<size_t, 0>>
-	auto Slice(S1 s1, S2 s2 = {})
+	template <SliceType S1, SliceType S2 = std::array<size_t, 2>>
+	auto Slice(S1 s1, S2 s2 = std::array<size_t, 2>{ 0, 0 })
 	{
 		size_t new_height = shape_[0];
 		size_t new_width = shape_[1];
 		size_t offset = 0;
 
 		using S1Type = std::decay_t<decltype(s1)>;
-		if constexpr (std::same_as<S1Type, size_t>)
+		using S2Type = std::decay_t<decltype(s2)>;
+
+		if constexpr (IndexSliceType<S1Type>)
 		{
 			new_height = 1;
 			offset = LinearIndex(s1, 0);
 		}
-		else if constexpr (std::same_as<S1Type, std::array<size_t, 2>>)
+		else if constexpr (RangeOrFullSliceType<S1Type>)
 		{
-			auto [ y_start, y_stop ] = s1;
-			new_height = y_stop - y_start;
-			offset = LinearIndex(y_start, 0);
-		}
-		else if constexpr (std::same_as<S1Type, std::array<size_t, 0>>)
-		{
-			// no-op
+			if (s1[0] != 0 || s1[1] != 0)
+			{
+				auto [y_start, y_stop] = s1;
+				new_height = y_stop - y_start;
+				offset = LinearIndex(y_start, 0);
+			}
 		}
 
-		using S2Type = std::decay_t<decltype(s2)>;
-		if constexpr (std::same_as<S2Type, size_t>)
+		if constexpr (IndexSliceType<S2Type>)
 		{
 			new_width = 1;
 			offset += s2;
 		}
-		else if constexpr (std::same_as<S2Type, std::array<size_t, 2>>)
+		else if constexpr (RangeOrFullSliceType<S2Type>)
 		{
-			auto [x_start, x_stop] = s2;
-			new_width = x_stop - x_start;
-			offset += x_start;
-		}
-		else if constexpr (std::same_as<S2Type, std::array<size_t, 0>>)
-		{
-			// no-op
+			if (s2[0] != 0 || s2[1] != 0)
+			{
+				auto [x_start, x_stop] = s2;
+				new_width = x_stop - x_start;
+				offset += x_start;
+			}
 		}
 
 		std::array<size_t, 2> new_shape{ new_height, new_width };
 		std::array<size_t, 2> new_strides{ strides_[0], strides_[1] };
 
 		return TensorView<T, 2>(data_.data(), new_shape, new_strides, offset);
+	}
+
+	auto Slice(std::array<size_t, 2> const& s1, std::array<size_t, 2> const& s2)
+	{
+		return Slice<std::array<size_t, 2>, std::array<size_t, 2>>(s1, s2);
+	}
+
+	template <SliceType S1>
+	auto Slice(S1 const& s1, std::array<size_t, 2> const& s2)
+	{
+		return Slice<S1, std::array<size_t, 2>>(s1, s2);
+	}
+
+	template <SliceType S2 = std::array<size_t, 2>>
+	auto Slice(std::array<size_t, 2> const& s1, S2 const& s2 = std::array<size_t, 2>{ 0, 0 })
+	{
+		return Slice<std::array<size_t, 2>, S2>(s1, s2);
 	}
 
 	friend std::ostream& operator<<(std::ostream& out, Tensor const& tensor)

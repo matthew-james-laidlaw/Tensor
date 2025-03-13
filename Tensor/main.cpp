@@ -1,5 +1,8 @@
 #include "Tensor.hpp"
 
+#include <array>
+#include <iostream>
+
 int main()
 {
 	Tensor<int, 2> matrix(4, 4);
@@ -14,21 +17,31 @@ int main()
 		}
 	}
 
-	std::cout << matrix << std::endl;
-	
-	auto b1 = matrix.Slice(size_t(2));
-	auto b2 = matrix.Slice(std::array<size_t, 2>{0, 2});
-	auto b3 = matrix.Slice(std::array<size_t, 0>{});
-	auto b4 = matrix.Slice(size_t(2), size_t(2));
-	auto b5 = matrix.Slice(size_t(2), std::array<size_t, 2>{0, 2});
-	auto b6 = matrix.Slice(std::array<size_t, 2>{0, 4}, std::array<size_t, 2>{0, 4});
+	auto s1 = matrix.Slice(1, 3);				 // index, index
+	auto s2 = matrix.Slice(1, { 1, 3 });		 // index, range
+	auto s3 = matrix.Slice(1, {});			     // index, full
+	auto s4 = matrix.Slice({ 1, 3 }, 3);		 // range, index
+	auto s5 = matrix.Slice({ 1, 3 }, { 2, 4 });  // range, range
+	auto s6 = matrix.Slice({ 1, 3 }, {});		 // range, full
+	auto s7 = matrix.Slice({}, 1);			     // full,  index
+	auto s8 = matrix.Slice({}, { 1, 3 });		 // full,  range
+	auto s9 = matrix.Slice({}, {});			     // full,  full
+	auto s10 = matrix.Slice(1);					 // index, implicit-full
+	auto s11 = matrix.Slice({ 1, 3 });			 // range, implicit-full
+	auto s12 = matrix.Slice({});				 // full,  implicit-full
 
-	std::cout << b1 << std::endl;
-	std::cout << b2 << std::endl;
-	std::cout << b3 << std::endl;
-	std::cout << b4 << std::endl;
-	std::cout << b5 << std::endl;
-	std::cout << b6 << std::endl;
+	std::cout << s1 << std::endl;
+	std::cout << s2 << std::endl;
+	std::cout << s3 << std::endl;
+	std::cout << s4 << std::endl;
+	std::cout << s5 << std::endl;
+	std::cout << s6 << std::endl;
+	std::cout << s7 << std::endl;
+	std::cout << s8 << std::endl;
+	std::cout << s9 << std::endl;
+	std::cout << s10 << std::endl;
+	std::cout << s11 << std::endl;
+	std::cout << s12 << std::endl;
 
 	return 0;
 }

@@ -29,35 +29,13 @@ template <size_t Order, typename... Ts>
 concept ValidShapeOrIndex = (sizeof...(Ts) == Order) && (std::convertible_to<Ts, size_t> && ...);
 
 template <typename T>
-concept RawSliceArg = std::same_as<T, size_t> ||
-std::same_as<T, std::array<size_t, 0>> ||
-std::same_as<T, std::array<size_t, 2>> ||
-std::same_as<T, std::initializer_list<size_t>>;
+concept IndexSliceType = std::convertible_to<T, size_t>;
 
-template <size_t Order, typename... Ts>
-concept ValidSlices = (sizeof...(Ts) > 0 && sizeof...(Ts) <= Order) &&
-(RawSliceArg<Ts> && ...);
+template <typename T>
+concept RangeOrFullSliceType = requires { typename T::value_type; }
+                            && std::same_as<T, std::array<typename T::value_type, 2>>
+                            && std::convertible_to<typename T::value_type, size_t>;
 
-constexpr auto convertSlice(auto&& arg)
-{
-    using Decayed = std::decay_t<decltype(arg)>;
-    if constexpr (std::same_as<Decayed, std::initializer_list<size_t>>) {
-        // If the initializer list is empty, treat as a full slice.
-        if (arg.size() == 0)
-            return std::array<size_t, 0>{};
-        // If it has two elements, treat it as a partial slice.
-        else if (arg.size() == 2) {
-            std::array<size_t, 2> arr;
-            std::copy(arg.begin(), arg.end(), arr.begin());
-            return arr;
-        }
-        else {
-            static_assert(arg.size() == 0 || arg.size() == 2,
-                "Initializer list must be empty (for full slice) or have exactly 2 elements (for a partial slice).");
-        }
-    }
-    else {
-        // If it's not an initializer list, forward it as-is.
-        return std::forward<decltype(arg)>(arg);
-    }
-}
+template <typename T>
+concept SliceType = IndexSliceType<T> || RangeOrFullSliceType<T>;
+
