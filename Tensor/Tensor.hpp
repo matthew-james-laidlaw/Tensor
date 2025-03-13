@@ -6,6 +6,9 @@
 #include <vector>
 
 template <typename T, size_t Order>
+class TensorView;
+
+template <typename T, size_t Order>
 class Tensor
 {
 private:
@@ -81,6 +84,53 @@ public:
 		return data_[LinearIndex(indices...)];
 	}
 
+	template <RawSliceArg S1, RawSliceArg S2 = std::array<size_t, 0>>
+	auto Slice(S1 s1, S2 s2 = {})
+	{
+		size_t new_height = shape_[0];
+		size_t new_width = shape_[1];
+		size_t offset = 0;
+
+		using S1Type = std::decay_t<decltype(s1)>;
+		if constexpr (std::same_as<S1Type, size_t>)
+		{
+			new_height = 1;
+			offset = LinearIndex(s1, 0);
+		}
+		else if constexpr (std::same_as<S1Type, std::array<size_t, 2>>)
+		{
+			auto [ y_start, y_stop ] = s1;
+			new_height = y_stop - y_start;
+			offset = LinearIndex(y_start, 0);
+		}
+		else if constexpr (std::same_as<S1Type, std::array<size_t, 0>>)
+		{
+			// no-op
+		}
+
+		using S2Type = std::decay_t<decltype(s2)>;
+		if constexpr (std::same_as<S2Type, size_t>)
+		{
+			new_width = 1;
+			offset += s2;
+		}
+		else if constexpr (std::same_as<S2Type, std::array<size_t, 2>>)
+		{
+			auto [x_start, x_stop] = s2;
+			new_width = x_stop - x_start;
+			offset += x_start;
+		}
+		else if constexpr (std::same_as<S2Type, std::array<size_t, 0>>)
+		{
+			// no-op
+		}
+
+		std::array<size_t, 2> new_shape{ new_height, new_width };
+		std::array<size_t, 2> new_strides{ strides_[0], strides_[1] };
+
+		return TensorView<T, 2>(data_.data(), new_shape, new_strides, offset);
+	}
+
 	friend std::ostream& operator<<(std::ostream& out, Tensor const& tensor)
 	{
 		out << "Tensor(shape = [";
@@ -122,3 +172,63 @@ private:
 	}
 
 };
+
+// A simple TensorView class that references the Tensor's data.
+template <typename T, size_t Order>
+class TensorView {
+public:
+	TensorView(T* data,
+		std::array<size_t, Order> shape,
+		std::array<size_t, Order> strides,
+		size_t offset)
+		: data_(data), shape_(shape), strides_(strides), offset_(offset)
+	{
+	}
+
+	friend std::ostream& operator<<(std::ostream& out, const TensorView<T, Order>& tv) {
+		out << "TensorView(shape = [";
+		for (size_t i = 0; i < tv.shape_.size(); ++i) {
+			out << tv.shape_[i];
+			if (i < tv.shape_.size() - 1) {
+				out << ", ";
+			}
+		}
+		out << "], data = [";
+
+		// Compute total number of elements.
+		size_t total = 1;
+		for (auto s : tv.shape_) {
+			total *= s;
+		}
+
+		// For each flattened index, compute the corresponding multi-index and then the element offset.
+		for (size_t idx = 0; idx < total; ++idx) {
+			std::array<size_t, Order> indices{};
+			size_t temp = idx;
+			// Convert the flat index into multi-index coordinates.
+			for (int dim = Order - 1; dim >= 0; --dim) {
+				indices[dim] = temp % tv.shape_[dim];
+				temp /= tv.shape_[dim];
+			}
+			// Compute the element offset.
+			size_t element_offset = tv.offset_;
+			for (size_t d = 0; d < Order; ++d) {
+				element_offset += indices[d] * tv.strides_[d];
+			}
+			out << tv.data_[element_offset];
+			if (idx + 1 < total) {
+				out << ", ";
+			}
+		}
+
+		out << "])";
+		return out;
+	}
+
+private:
+	T* data_;
+	std::array<size_t, Order> shape_;
+	std::array<size_t, Order> strides_;
+	size_t offset_;
+};
+
