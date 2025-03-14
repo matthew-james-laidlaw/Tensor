@@ -47,16 +47,8 @@ public:
 		requires(ValidShapeOrIndex<Order, Indices...>)
 	inline auto operator()(Indices... indices) const->T const&;
 
-	template <SliceType S1, SliceType S2 = std::array<size_t, 2>>
-	auto Slice(S1 s1, S2 s2 = std::array<size_t, 2>{ 0, 0 });
-
-	auto Slice(std::array<size_t, 2> const& s1, std::array<size_t, 2> const& s2);
-
-	template <SliceType S1>
-	auto Slice(S1 const& s1, std::array<size_t, 2> const& s2);
-
-	template <SliceType S2 = std::array<size_t, 2>>
-	auto Slice(std::array<size_t, 2> const& s1, S2 const& s2 = std::array<size_t, 2>{ 0, 0 });
+	template <typename... Slices>
+	auto Slice(Slices&&... slices);
 
 	auto Size() const -> size_t;
 	auto Dimensions() const -> std::array<size_t, Order> const&;
@@ -94,6 +86,15 @@ private:
 	template <typename... Indices>
 		requires(ValidShapeOrIndex<Order, Indices...>)
 	inline auto LinearIndex(Indices... indices) const->size_t;
+
+	// Helper function to process dimensions at compile time.
+	template <size_t Dim, size_t Max, typename F>
+	static constexpr void ProcessDimensions(F&& f) {
+		if constexpr (Dim < Max) {
+			f(std::integral_constant<size_t, Dim>{});
+			ProcessDimensions<Dim + 1, Max>(std::forward<F>(f));
+		}
+	}
 
 };
 

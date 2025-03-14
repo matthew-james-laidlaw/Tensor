@@ -27,15 +27,29 @@ Tensor<T, Order>::Tensor(T const& initializer, Shape... shape)
 
 template <typename T, size_t Order>
 Tensor<T, Order>::Tensor(TensorView<T, Order> const& view)
-	: Tensor(view.Shape())
+    : Tensor(view.Shape())
 {
-	for (size_t y = 0; y < view.Shape()[0]; ++y)
-	{
-		for (size_t x = 0; x < view.Shape()[1]; ++x)
-		{
-			this->operator()(y, x) = view(y, x);
-		}
-	}
+    // Create an index array initialized to zeros.
+    std::array<size_t, Order> index{};
+    
+    // Define a recursive lambda that iterates over each dimension.
+    auto assign_recursive = [&](auto& self, size_t dim) -> void {
+        if (dim == Order)
+        {
+            // When we have set all indices, assign the value.
+            this->operator()(index) = view(index);
+            return;
+        }
+        // Loop over the size of the current dimension.
+        for (size_t i = 0; i < view.Shape()[dim]; ++i)
+        {
+            index[dim] = i;
+            self(self, dim + 1);
+        }
+    };
+    
+    // Kick off the recursion starting at the first dimension.
+    assign_recursive(assign_recursive, 0);
 }
 
 template <typename T, size_t Order>

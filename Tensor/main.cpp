@@ -21,7 +21,7 @@ int main()
 	auto s11 = matrix.Slice({ 1, 3 });			 // range, implicit-full
 	auto s12 = matrix.Slice({});				 // full,  implicit-full
 
-	Tensor<int, 2> tt(s12);
+	Tensor<int, 2> tt(s11);
 	std::cout << tt << std::endl;
 
 	return 0;
