@@ -1,14 +1,13 @@
 #pragma once
 
+#include "TensorFwd.hpp"
+
 #include "Utilities.hpp"
 #include "Slice.hpp"
 
 #include <array>
 #include <iostream>
 #include <vector>
-
-template <typename T, size_t Order>
-class TensorView;
 
 template <typename T, size_t Order>
 class Tensor
@@ -51,7 +50,7 @@ public:
 	template <typename... Slices>
 	auto Slice(Slices&&... slice_pack)
 	{
-		return SliceImpl<T, Order>(shape_, strides_, data_, slice_pack...);
+		return SliceImpl<T, Order>(shape_, strides_, data_.data(), slice_pack...);
 	}
 
 	auto Size() const -> size_t;
