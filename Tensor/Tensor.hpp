@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Utilities.hpp"
+#include "Slice.hpp"
 
 #include <array>
 #include <iostream>
@@ -47,16 +48,11 @@ public:
 		requires(ValidShapeOrIndex<Order, Indices...>)
 	inline auto operator()(Indices... indices) const->T const&;
 
-	template <SliceType S1, SliceType S2 = std::array<size_t, 2>>
-	auto Slice(S1 s1, S2 s2 = std::array<size_t, 2>{ 0, 0 });
-
-	auto Slice(std::array<size_t, 2> const& s1, std::array<size_t, 2> const& s2);
-
-	template <SliceType S1>
-	auto Slice(S1 const& s1, std::array<size_t, 2> const& s2);
-
-	template <SliceType S2 = std::array<size_t, 2>>
-	auto Slice(std::array<size_t, 2> const& s1, S2 const& s2 = std::array<size_t, 2>{ 0, 0 });
+	template <typename... Slices>
+	auto Slice(Slices&&... slice_pack)
+	{
+		return SliceImpl<T, Order>(shape_, strides_, data_, slice_pack...);
+	}
 
 	auto Size() const -> size_t;
 	auto Dimensions() const -> std::array<size_t, Order> const&;

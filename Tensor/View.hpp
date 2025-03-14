@@ -2,7 +2,7 @@ template <typename T, size_t Order>
 class TensorView
 {
 public:
-	TensorView(T* data,
+	TensorView(const T* data,
 		std::array<size_t, Order> shape,
 		std::array<size_t, Order> strides,
 		size_t offset)
@@ -68,7 +68,7 @@ public:
 	}
 
 private:
-	T* data_;
+	const T* data_;
 	std::array<size_t, Order> shape_;
 	std::array<size_t, Order> strides_;
 	size_t offset_;
