@@ -29,27 +29,27 @@ template <typename T, size_t Order>
 Tensor<T, Order>::Tensor(TensorView<T, Order> const& view)
     : Tensor(view.Shape())
 {
-    // Create an index array initialized to zeros.
-    std::array<size_t, Order> index{};
-    
-    // Define a recursive lambda that iterates over each dimension.
-    auto assign_recursive = [&](auto& self, size_t dim) -> void {
-        if (dim == Order)
+    // Define a recursive lambda that accumulates indices.
+    auto assign_recursive = [&](auto&& self, auto... indices) -> void {
+        // Base case: when we have indices for all dimensions, assign the element.
+        if constexpr (sizeof...(indices) == Order)
         {
-            // When we have set all indices, assign the value.
-            this->operator()(index) = view(index);
-            return;
+            this->operator()(indices...) = view(indices...);
         }
-        // Loop over the size of the current dimension.
-        for (size_t i = 0; i < view.Shape()[dim]; ++i)
+        else
         {
-            index[dim] = i;
-            self(self, dim + 1);
+            // Determine the current dimension (number of accumulated indices).
+            constexpr size_t dim = sizeof...(indices);
+            // Loop over the valid indices for this dimension.
+            for (size_t i = 0; i < view.Shape()[dim]; ++i)
+            {
+                self(self, indices..., i);
+            }
         }
     };
-    
-    // Kick off the recursion starting at the first dimension.
-    assign_recursive(assign_recursive, 0);
+
+    // Kick off the recursion with no indices.
+    assign_recursive(assign_recursive);
 }
 
 template <typename T, size_t Order>
