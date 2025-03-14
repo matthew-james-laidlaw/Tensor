@@ -21,6 +21,11 @@ int main()
 	auto s11 = matrix.Slice({ 1, 3 });			 // range, implicit-full
 	auto s12 = matrix.Slice({});				 // full,  implicit-full
 
+	Tensor<int, 2> tt(s12);
+	std::cout << tt << std::endl;
+
+	return 0;
+
 	std::cout << s1 << std::endl;
 	std::cout << s2 << std::endl;
 	std::cout << s3 << std::endl;
@@ -48,7 +53,6 @@ int main()
 
 	auto t5 = std::move(t4);
 	std::cout << t5 << std::endl;
-
 
 	return 0;
 }

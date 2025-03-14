@@ -26,6 +26,19 @@ Tensor<T, Order>::Tensor(T const& initializer, Shape... shape)
 }
 
 template <typename T, size_t Order>
+Tensor<T, Order>::Tensor(TensorView<T, Order> const& view)
+	: Tensor(view.Shape())
+{
+	for (size_t y = 0; y < view.Shape()[0]; ++y)
+	{
+		for (size_t x = 0; x < view.Shape()[1]; ++x)
+		{
+			this->operator()(y, x) = view(y, x);
+		}
+	}
+}
+
+template <typename T, size_t Order>
 Tensor<T, Order>::Tensor(Tensor const& other)
 	: Tensor(other.shape_)
 {
