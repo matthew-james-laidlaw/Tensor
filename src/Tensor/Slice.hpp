@@ -59,7 +59,7 @@ auto SliceImpl(std::array<size_t, Order> shape, std::array<size_t, Order> stride
             new_shape[current_output_dimension] = slice_stop - slice_start;
 
             // preserve the stride information for this dimension for the resulting view
-            new_strides[current_output_dimension] = strides[current_input_dimension++];
+            new_strides[current_output_dimension++] = strides[current_input_dimension];
         }
     };
 
