@@ -38,4 +38,3 @@ concept RangeOrFullSliceType = requires { typename T::value_type; }
 
 template <typename T>
 concept SliceType = IndexSliceType<T> || RangeOrFullSliceType<T>;
-

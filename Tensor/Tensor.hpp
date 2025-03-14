@@ -2,11 +2,9 @@
 
 #include "TensorUtilities.hpp"
 
+#include <array>
 #include <iostream>
 #include <vector>
-
-template <typename T>
-concept SliceArg = std::same_as<T, std::initializer_list<int>>;
 
 template <typename T, size_t Order>
 class TensorView;
@@ -27,143 +25,41 @@ public:
 
 	template <typename... Shape>
 		requires(ValidShapeOrIndex<Order, Shape...>)
-	Tensor(Shape... shape)
-		: Tensor(std::array<size_t, Order>{ static_cast<size_t>(shape)... })
-	{}
+	Tensor(Shape... shape);
 
 	template <typename... Shape>
 		requires(ValidShapeOrIndex<Order, Shape...>)
-	Tensor(T const& initializer, Shape... shape)
-		: Tensor(std::array<size_t, Order>{ static_cast<size_t>(shape)... })
-	{
-		std::fill(data_.begin(), data_.end(), initializer);
-	}
+	Tensor(T const& initializer, Shape... shape);
 
-	Tensor(Tensor const& other)
-		: Tensor(other.shape_)
-	{
-		std::copy(other.data_.begin(), other.data_.end(), data_.begin());
-	}
+	Tensor(Tensor const& other);
+	Tensor(Tensor&& other) noexcept;
 
-	Tensor(Tensor&& other) noexcept
-		: Tensor(other.shape_)
-	{
-		data_ = std::move(other.data_);
-	}
-
-	Tensor& operator=(Tensor const& other)
-	{
-		if (this != &other)
-		{
-			shape_ = other.shape_;
-			strides_ = other.strides_;
-			data_ = other.data_;
-		}
-		return *this;
-	}
-
-	Tensor& operator=(Tensor&& other) noexcept
-	{
-		if (this != &other)
-		{
-			shape_ = other.shape_;
-			strides_ = other.strides_;
-			data_ = std::move(other.data_);
-		}
-		return *this;
-	}
+	auto operator=(Tensor const& other) -> Tensor&;
+	auto operator=(Tensor&& other) noexcept -> Tensor&;
 
 	template <typename... Indices>
 		requires(ValidShapeOrIndex<Order, Indices...>)
-	inline auto operator()(Indices... indices) -> T&
-	{
-		return data_[LinearIndex(indices...)];
-	}
+	inline auto operator()(Indices... indices)->T&;
 
 	template <typename... Indices>
 		requires(ValidShapeOrIndex<Order, Indices...>)
-	inline auto operator()(Indices... indices) const -> T const&
-	{
-		return data_[LinearIndex(indices...)];
-	}
+	inline auto operator()(Indices... indices) const->T const&;
 
 	template <SliceType S1, SliceType S2 = std::array<size_t, 2>>
-	auto Slice(S1 s1, S2 s2 = std::array<size_t, 2>{ 0, 0 })
-	{
-		size_t new_height = shape_[0];
-		size_t new_width = shape_[1];
-		size_t offset = 0;
+	auto Slice(S1 s1, S2 s2 = std::array<size_t, 2>{ 0, 0 });
 
-		using S1Type = std::decay_t<decltype(s1)>;
-		using S2Type = std::decay_t<decltype(s2)>;
-
-		if constexpr (IndexSliceType<S1Type>)
-		{
-			new_height = 1;
-			offset = LinearIndex(s1, 0);
-		}
-		else if constexpr (RangeOrFullSliceType<S1Type>)
-		{
-			if (s1[0] != 0 || s1[1] != 0)
-			{
-				auto [y_start, y_stop] = s1;
-				new_height = y_stop - y_start;
-				offset = LinearIndex(y_start, 0);
-			}
-		}
-
-		if constexpr (IndexSliceType<S2Type>)
-		{
-			new_width = 1;
-			offset += s2;
-		}
-		else if constexpr (RangeOrFullSliceType<S2Type>)
-		{
-			if (s2[0] != 0 || s2[1] != 0)
-			{
-				auto [x_start, x_stop] = s2;
-				new_width = x_stop - x_start;
-				offset += x_start;
-			}
-		}
-
-		std::array<size_t, 2> new_shape{ new_height, new_width };
-		std::array<size_t, 2> new_strides{ strides_[0], strides_[1] };
-
-		return TensorView<T, 2>(data_.data(), new_shape, new_strides, offset);
-	}
-
-	auto Slice(std::array<size_t, 2> const& s1, std::array<size_t, 2> const& s2)
-	{
-		return Slice<std::array<size_t, 2>, std::array<size_t, 2>>(s1, s2);
-	}
+	auto Slice(std::array<size_t, 2> const& s1, std::array<size_t, 2> const& s2);
 
 	template <SliceType S1>
-	auto Slice(S1 const& s1, std::array<size_t, 2> const& s2)
-	{
-		return Slice<S1, std::array<size_t, 2>>(s1, s2);
-	}
+	auto Slice(S1 const& s1, std::array<size_t, 2> const& s2);
 
 	template <SliceType S2 = std::array<size_t, 2>>
-	auto Slice(std::array<size_t, 2> const& s1, S2 const& s2 = std::array<size_t, 2>{ 0, 0 })
-	{
-		return Slice<std::array<size_t, 2>, S2>(s1, s2);
-	}
+	auto Slice(std::array<size_t, 2> const& s1, S2 const& s2 = std::array<size_t, 2>{ 0, 0 });
 
-	auto Data() -> T*
-	{
-		return data_.data();
-	}
-
-	auto Data() const -> const T*
-	{
-		return data_.data();
-	}
-
-	auto Size() const -> size_t
-	{
-		return data_.size();
-	}
+	auto Size() const -> size_t;
+	auto Dimensions() const -> std::array<size_t, Order> const&;
+	auto Data() -> T*;
+	auto Data() const -> const T*;
 
 	friend std::ostream& operator<<(std::ostream& out, Tensor const& tensor)
 	{
@@ -191,19 +87,11 @@ public:
 
 private:
 
-	Tensor(std::array<size_t, Order> const& shape)
-		: shape_(shape)
-		, strides_(ComputeStrides(shape_))
-		, data_(ComputeSize(shape_))
-	{}
+	Tensor(std::array<size_t, Order> const& shape);
 
 	template <typename... Indices>
 		requires(ValidShapeOrIndex<Order, Indices...>)
-	inline auto LinearIndex(Indices... indices) const -> size_t
-	{
-		auto indices_array = std::array<size_t, Order>{ static_cast<size_t>(indices)... };
-		return std::inner_product(strides_.begin(), strides_.end(), indices_array.begin(), size_t(0));
-	}
+	inline auto LinearIndex(Indices... indices) const->size_t;
 
 };
 
@@ -266,3 +154,4 @@ private:
 	size_t offset_;
 };
 
+#include "TensorImpl.hpp"

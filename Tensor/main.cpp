@@ -34,5 +34,21 @@ int main()
 	std::cout << s11 << std::endl;
 	std::cout << s12 << std::endl;
 
+	Tensor<int, 2> t1(4, 4);
+	std::iota(t1.Data(), t1.Data() + t1.Size(), 0);
+
+	auto t2(t1);
+	std::cout << t2 << std::endl;
+
+	auto t3(std::move(t2));
+	std::cout << t3 << std::endl;
+
+	auto t4 = t1;
+	std::cout << t4 << std::endl;
+
+	auto t5 = std::move(t4);
+	std::cout << t5 << std::endl;
+
+
 	return 0;
 }
