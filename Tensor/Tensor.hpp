@@ -150,6 +150,21 @@ public:
 		return Slice<std::array<size_t, 2>, S2>(s1, s2);
 	}
 
+	auto Data() -> T*
+	{
+		return data_.data();
+	}
+
+	auto Data() const -> const T*
+	{
+		return data_.data();
+	}
+
+	auto Size() const -> size_t
+	{
+		return data_.size();
+	}
+
 	friend std::ostream& operator<<(std::ostream& out, Tensor const& tensor)
 	{
 		out << "Tensor(shape = [";

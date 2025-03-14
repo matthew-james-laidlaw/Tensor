@@ -6,16 +6,7 @@
 int main()
 {
 	Tensor<int, 2> matrix(4, 4);
-
-	int i = 0;
-
-	for (size_t y = 0; y < 4; ++y)
-	{
-		for (size_t x = 0; x < 4; ++x)
-		{
-			matrix(y, x) = i++;
-		}
-	}
+	std::iota(matrix.Data(), matrix.Data() + matrix.Size(), 0);
 
 	auto s1 = matrix.Slice(1, 3);				 // index, index
 	auto s2 = matrix.Slice(1, { 1, 3 });		 // index, range
