@@ -27,6 +27,11 @@ public:
         return data_;
     }
 
+    auto Data() const -> const T*
+    {
+        return data_;
+    }
+
     auto Shape() const -> std::array<size_t, Order>
     {
         return shape_;

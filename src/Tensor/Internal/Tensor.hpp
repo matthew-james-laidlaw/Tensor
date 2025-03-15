@@ -94,6 +94,11 @@ public:
         return data_.data();
     }
 
+    auto Data() const -> const T*
+    {
+        return data_.data();
+    }
+
     inline auto operator()(std::array<size_t, Order> const& indices) -> T&
     {
         return data_[LinearIndex(indices)];

@@ -13,6 +13,11 @@ public:
         return static_cast<Derived&>(*this).Data();
     }
 
+    auto Data() const -> decltype(auto)
+    {
+        return static_cast<Derived&>(*this).Data();
+    }
+
     auto Shape() const -> decltype(auto)
     {
         return static_cast<Derived const&>(*this).Shape();
