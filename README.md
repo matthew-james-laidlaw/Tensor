@@ -1,6 +1,7 @@
 # Tensor
 
 ### TODO
-- Broadcasting
+- Expression templates
 - Tensor initializer list
+- Broadcasting
 - Pretty printing
