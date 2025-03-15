@@ -10,8 +10,8 @@
 
 struct Range
 {
-	size_t start;
-	size_t stop;
+    size_t start;
+    size_t stop;
 };
 
 template <typename... Slices>
@@ -25,27 +25,28 @@ auto SliceImpl(std::array<size_t, Order> shape, std::array<size_t, Order> stride
 {
     // index slices reduce dimensionality by one, range slices preserve it (albeit with a constrained range of elements)
     // thus, the remaining output dimensionality is equivalent to the number of range slices provided
-	constexpr size_t NewOrder = CountRangeSlices<Slices...>();
+    constexpr size_t NewOrder = CountRangeSlices<Slices...>();
 
     // the resulting view needs a pointer offset, a new shape based on the given slices, and the set of strides that still
     // matter for calculating linear indices non-contiguously
-	size_t offset = 0;
-	std::array<size_t, NewOrder> new_shape;
-	std::array<size_t, NewOrder> new_strides;
-	size_t current_output_dimension = 0;
+    size_t offset = 0;
+    std::array<size_t, NewOrder> new_shape;
+    std::array<size_t, NewOrder> new_strides;
+    size_t current_output_dimension = 0;
 
     auto slices = std::make_tuple(slice_pack...);
 
     auto process_dimension = [&](auto i)
     {
         constexpr size_t current_input_dimension = decltype(i)::value;
+
         auto slice = std::get<i>(slices);
 
         if constexpr (std::convertible_to<decltype(slice), size_t>)
         {
             auto slice_index = static_cast<size_t>(slice);
 
-            // advance the offset to the beginning index of this slice 
+            // advance the offset to the beginning index of this slice
             offset += slice_index * strides[current_input_dimension];
         }
         else if constexpr (std::same_as<decltype(slice), Range>)
@@ -69,5 +70,5 @@ auto SliceImpl(std::array<size_t, Order> shape, std::array<size_t, Order> stride
     };
     index_sequence(std::make_index_sequence<Order>{});
 
-    return TensorView<T, NewOrder>{ data, new_shape, new_strides, offset };
+    return TensorView<T, NewOrder>{data, new_shape, new_strides, offset};
 }
