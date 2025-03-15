@@ -30,7 +30,7 @@ TEST(TensorTests, FillConstructor)
 
 TEST(TensorTests, CopyConstructor)
 {
-    Tensor<int, 2> m1({4, 2});
+    Tensor<int, 2> m1({4, 2}, 42);
     Tensor<int, 2> m2(m1);
 
     EXPECT_EQ(m2.Shape().size(), 2);
@@ -45,7 +45,8 @@ TEST(TensorTests, CopyConstructor)
     {
         for (size_t x = 0; x < m1.Shape()[1]; ++x)
         {
-            EXPECT_EQ(m1({y, x}), m2({y, x}));
+            EXPECT_EQ(m1({y, x}), 42);
+            EXPECT_EQ(m2({y, x}), 42);
         }
     }
 }
@@ -76,7 +77,7 @@ TEST(TensorTests, MoveConstructor)
 
 TEST(TensorTests, CopyAssignment)
 {
-    Tensor<int, 2> m1({4, 2});
+    Tensor<int, 2> m1({4, 2}, 42);
     Tensor<int, 2> m2 = m1;
 
     EXPECT_EQ(m2.Shape().size(), 2);
@@ -91,7 +92,8 @@ TEST(TensorTests, CopyAssignment)
     {
         for (size_t x = 0; x < m1.Shape()[1]; ++x)
         {
-            EXPECT_EQ(m1({y, x}), m2({y, x}));
+            EXPECT_EQ(m1({y, x}), 42);
+            EXPECT_EQ(m2({y, x}), 42);
         }
     }
 }
@@ -164,4 +166,52 @@ TEST(TensorTests, SliceBlock)
     EXPECT_EQ(block({0, 1}), 7);
     EXPECT_EQ(block({1, 0}), 10);
     EXPECT_EQ(block({1, 1}), 11);
+}
+
+TEST(TensorTests, SlicePlanes)
+{
+    Tensor<int, 3> t1({3, 1, 1});
+    std::iota(t1.Data(), t1.Data() + 3, 1);
+    View<int, 2> p1 = t1.Slice(0, Range{0, 1}, Range{0, 1});
+    View<int, 2> p2 = t1.Slice(1, Range{0, 1}, Range{0, 1});
+    View<int, 2> p3 = t1.Slice(2, Range{0, 1}, Range{0, 1});
+
+    EXPECT_EQ(p1.Shape().size(), 2);
+    EXPECT_EQ(p1.Shape()[0], 1);
+    EXPECT_EQ(p1.Shape()[1], 1);
+    EXPECT_EQ(p1({0, 0}), 1);
+
+    EXPECT_EQ(p2.Shape().size(), 2);
+    EXPECT_EQ(p2.Shape()[0], 1);
+    EXPECT_EQ(p2.Shape()[1], 1);
+    EXPECT_EQ(p2({0, 0}), 2);
+
+    EXPECT_EQ(p3.Shape().size(), 2);
+    EXPECT_EQ(p3.Shape()[0], 1);
+    EXPECT_EQ(p3.Shape()[1], 1);
+    EXPECT_EQ(p3({0, 0}), 3);
+}
+
+TEST(TensorTests, SlicePixels)
+{
+    Tensor<int, 3> t1({1, 1, 3});
+    std::iota(t1.Data(), t1.Data() + 3, 1);
+    View<int, 2> p1 = t1.Slice(Range{0, 1}, Range{0, 1}, 0);
+    View<int, 2> p2 = t1.Slice(Range{0, 1}, Range{0, 1}, 1);
+    View<int, 2> p3 = t1.Slice(Range{0, 1}, Range{0, 1}, 2);
+
+    EXPECT_EQ(p1.Shape().size(), 2);
+    EXPECT_EQ(p1.Shape()[0], 1);
+    EXPECT_EQ(p1.Shape()[1], 1);
+    EXPECT_EQ(p1({0, 0}), 1);
+
+    EXPECT_EQ(p2.Shape().size(), 2);
+    EXPECT_EQ(p2.Shape()[0], 1);
+    EXPECT_EQ(p2.Shape()[1], 1);
+    EXPECT_EQ(p2({0, 0}), 2);
+
+    EXPECT_EQ(p3.Shape().size(), 2);
+    EXPECT_EQ(p3.Shape()[0], 1);
+    EXPECT_EQ(p3.Shape()[1], 1);
+    EXPECT_EQ(p3({0, 0}), 3);
 }
