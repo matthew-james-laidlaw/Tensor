@@ -1,0 +1,48 @@
+name: Build & Test
+
+on:
+    push:
+    pull_request:
+        branches: [ "main" ]
+
+jobs:
+    build-and-test:
+        name: ${{ matrix.arch }}
+        runs-on: ${{ matrix.os }}
+
+        strategy:
+          fail-fast: false
+          matrix:
+            include:
+              - os: ubuntu-24.04-arm
+                arch: arm64-linux
+              - os: macos-14
+                arch: arm64-mac
+              - os: ubuntu-24.04
+                arch: x64-linux
+              - os: macos-13
+                arch: x64-mac
+              - os: windows-2022
+                arch: x64-windows
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v3
+              with:
+                submodules: 'recursive'
+                fetch-depth: 1
+
+            - name: Configure
+              shell: bash
+              run: |
+                cmake --preset release
+
+            - name: Build
+              shell: bash
+              run: |
+                cmake --build --preset release
+
+            - name: Test (Unit)
+              shell: bash
+              run: |
+                ctest --preset release

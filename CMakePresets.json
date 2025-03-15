@@ -1,0 +1,92 @@
+{
+    "version": 8,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 29,
+        "patch": 3
+    },
+    "configurePresets": [
+        {
+            "name": "debug",
+            "binaryDir": "${sourceDir}/build/debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": {
+                    "type": "STRING",
+                    "value": "Debug"
+                }
+            }
+        },
+        {
+            "name": "release",
+            "binaryDir": "${sourceDir}/build/release",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": {
+                    "type": "STRING",
+                    "value": "Release"
+                }
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "jobs": 8
+        },
+        {
+            "name": "debug",
+            "inherits": "base",
+            "configurePreset": "debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release",
+            "inherits": "base",
+            "configurePreset": "release",
+            "configuration": "Release"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "output": {
+                "outputOnFailure": true
+            },
+            "execution": {
+                "noTestsAction": "error",
+                "stopOnFailure": true
+            }
+        },
+        {
+            "name": "debug",
+            "inherits": "base",
+            "configurePreset": "debug",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release",
+            "inherits": "base",
+            "configurePreset": "release",
+            "configuration": "Release"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "debug",
+            "steps": [
+                { "type": "configure", "name": "debug" },
+                { "type": "build", "name": "debug" },
+                { "type": "test", "name": "debug" }
+            ]
+        },
+        {
+            "name": "release",
+            "steps": [
+                { "type": "configure", "name": "release" },
+                { "type": "build", "name": "release" },
+                { "type": "test", "name": "release" }
+            ]
+        }
+    ]
+}

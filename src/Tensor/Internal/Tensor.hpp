@@ -39,6 +39,46 @@ public:
         , data_(ComputeSize(shape))
     {}
 
+    Tensor(std::array<size_t, Order> const& shape, T initializer)
+        : Tensor(shape)
+    {
+        std::fill(data_.begin(), data_.end(), initializer);
+    }
+
+    Tensor(Tensor const& other)
+        : Tensor(other.shape_)
+    {
+        std::copy(other.data_.begin(), other.data_.end(), data_.begin());
+    }
+
+    Tensor(Tensor&& other)
+        : Tensor(other.shape_)
+    {
+        data_ = std::move(other.data_);
+    }
+
+    Tensor& operator=(Tensor const& other)
+    {
+        if (this != &other)
+        {
+            shape_ = other.shape_;
+            strides_ = other.shape_;
+            data_ = other.data_;
+        }
+        return *this;
+    }
+
+    Tensor& operator=(Tensor&& other)
+    {
+        if (this != &other)
+        {
+            shape_ = other.shape_;
+            strides_ = other.shape_;
+            data_ = std::move(other.data_);
+        }
+        return *this;
+    }
+
     auto Shape() const -> std::array<size_t, Order>
     {
         return shape_;
