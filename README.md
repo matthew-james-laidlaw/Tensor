@@ -3,5 +3,5 @@
 ### TODO
 - Expression templates
 - Tensor initializer list
-- Broadcasting
+- Tensor arithmetic + broadcasting
 - Pretty printing
