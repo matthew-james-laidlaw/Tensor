@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include <Internal/ThreadPool.hpp>
+#include <ThreadPool.hpp>
 
 #include <atomic>
 #include <chrono>
@@ -21,7 +21,7 @@ TEST(ThreadPoolTests, ConstructorProvidedThreadCount)
 TEST(ThreadPoolTests, SingleTaskIncrementsCounter)
 {
     ThreadPool pool;
-    
+
     std::atomic<int> counter = 0;
 
     pool.Enqueue([&counter]()
@@ -37,7 +37,7 @@ TEST(ThreadPoolTests, SingleTaskIncrementsCounter)
 TEST(ThreadPoolTests, MultipleTasksIncrementCounter)
 {
     ThreadPool pool;
-    
+
     std::atomic<int> counter = 0;
 
     for (size_t i = 0; i < 100; ++i)
@@ -51,4 +51,56 @@ TEST(ThreadPoolTests, MultipleTasksIncrementCounter)
     pool.Wait();
 
     EXPECT_EQ(counter.load(), 100);
+}
+
+TEST(ThreadPoolTests, MultipleUses)
+{
+    ThreadPool pool;
+
+    std::atomic<int> counter = 0;
+
+    for (size_t i = 0; i < 100; ++i)
+    {
+        pool.Enqueue([&counter]()
+        {
+            counter.fetch_add(1);
+        });
+    }
+
+    pool.Wait();
+
+    EXPECT_EQ(counter.load(), 100);
+
+    for (size_t i = 0; i < 100; ++i)
+    {
+        pool.Enqueue([&counter]()
+        {
+            counter.fetch_add(1);
+        });
+    }
+
+    pool.Wait();
+
+    EXPECT_EQ(counter.load(), 200);
+}
+
+TEST(ThreadPoolTests, UseAfterShutdown)
+{
+    ThreadPool pool;
+
+    std::atomic<int> counter = 0;
+
+    for (size_t i = 0; i < 100; ++i)
+    {
+        pool.Enqueue([&counter]()
+        {
+            counter.fetch_add(1);
+        });
+    }
+
+    pool.Shutdown();
+
+    EXPECT_EQ(counter.load(), 100);
+
+    EXPECT_THROW(pool.Enqueue([]() {}), std::runtime_error);
 }

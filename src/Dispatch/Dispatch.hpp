@@ -1,11 +1,16 @@
 #pragma once
 
-#include "Internal/ThreadPool.hpp"
+#include "ThreadPool.hpp"
+
+ThreadPool& GetDispatcherThreadPool() {
+    static ThreadPool pool;
+    return pool;
+}
 
 template <typename Callable>
 auto DispatchElement(size_t height, size_t width, Callable&& callable) -> void
 {
-    ThreadPool thread_pool;
+    ThreadPool& thread_pool = GetDispatcherThreadPool();
     size_t num_threads = thread_pool.Threads();
 
     size_t num_tasks = (height < num_threads) ? height : num_threads;
@@ -37,7 +42,7 @@ auto DispatchElement(size_t height, size_t width, Callable&& callable) -> void
 template <typename Callable>
 auto DispatchRow(size_t height, Callable&& callable) -> void
 {
-    ThreadPool thread_pool;
+    ThreadPool& thread_pool = GetDispatcherThreadPool();
     size_t num_threads = thread_pool.Threads();
     size_t num_tasks = (height < num_threads) ? height : num_threads;
     size_t rows_per_task = height / num_tasks;

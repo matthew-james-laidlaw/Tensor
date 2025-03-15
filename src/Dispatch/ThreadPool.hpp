@@ -85,6 +85,12 @@ public:
     {
         {
             std::unique_lock<std::mutex> lock(queue_mutex_);
+
+            if (stop_)
+            {
+                throw std::runtime_error("cannot enqueue on a stopped thread pool");
+            }
+
             tasks_.emplace(std::bind(std::forward<Function>(function), std::forward<Arguments>(args)...));
             ++unfinished_tasks_;
         }
@@ -104,8 +110,6 @@ public:
     {
         Shutdown();
     }
-
-private:
 
     void Shutdown()
     {
