@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include <variant>
 #include <vector>
+#include <tuple>
 
 struct Range
 {
