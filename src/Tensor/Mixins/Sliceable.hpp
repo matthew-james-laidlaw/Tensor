@@ -22,57 +22,52 @@ constexpr auto CountRangeSlices() -> size_t
 }
 
 template <typename T, typename... Slices>
-auto SliceImpl(T& tensor, Slices&&... slice_pack)
+auto SliceImpl(T& tensor, Slices&&... slicePack)
 {
     using value_type = TensorTraits<T>::value_type;
     static constexpr size_t order = TensorTraits<T>::order;
     static constexpr bool has_offset = TensorTraits<T>::has_offset;
 
-    // The new tensor order is the number of Range slices.
     constexpr size_t NewOrder = CountRangeSlices<Slices...>();
 
-    // Calculate the offset. If the tensor is already a View, use its offset.
     size_t offset = 0;
     if constexpr (has_offset)
     {
         offset = tensor.Offset();
     }
 
-    std::array<size_t, NewOrder> new_shape{};
-    std::array<size_t, NewOrder> new_strides{};
-    size_t current_output_dimension = 0;
+    std::array<size_t, NewOrder> newShape{};
+    std::array<size_t, NewOrder> newStrides{};
+    size_t currentOutputDimension = 0;
 
-    // Pack slices into a tuple.
-    auto slices = std::make_tuple(std::forward<Slices>(slice_pack)...);
+    auto slices = std::make_tuple(std::forward<Slices>(slicePack)...);
 
-    auto process_dimension = [&](auto i)
+    auto processDimension = [&](auto i)
     {
-        constexpr size_t current_input_dimension = decltype(i)::value;
+        constexpr size_t currentInputDimension = decltype(i)::value;
         auto slice = std::get<i>(slices);
 
         if constexpr (std::convertible_to<decltype(slice), size_t>)
         {
-            size_t slice_index = static_cast<size_t>(slice);
-            // For an index slice, update the offset.
-            offset += slice_index * tensor.Strides()[current_input_dimension];
+            size_t sliceIndex = static_cast<size_t>(slice);
+            offset += sliceIndex * tensor.Strides()[currentInputDimension];
         }
         else if constexpr (std::same_as<decltype(slice), Range>)
         {
-            auto [slice_start, slice_stop] = slice;
-            offset += slice_start * tensor.Strides()[current_input_dimension];
-            new_shape[current_output_dimension] = slice_stop - slice_start;
-            new_strides[current_output_dimension++] = tensor.Strides()[current_input_dimension];
+            auto [sliceStart, sliceStop] = slice;
+            offset += sliceStart * tensor.Strides()[currentInputDimension];
+            newShape[currentOutputDimension] = sliceStop - sliceStart;
+            newStrides[currentOutputDimension++] = tensor.Strides()[currentInputDimension];
         }
     };
 
-    // Process each input dimension.
-    auto index_sequence = [&]<std::size_t... I>(std::index_sequence<I...>)
+    auto indexSequence = [&]<std::size_t... I>(std::index_sequence<I...>)
     {
-        (process_dimension(std::integral_constant<size_t, I>{}), ...);
+        (processDimension(std::integral_constant<size_t, I>{}), ...);
     };
-    index_sequence(std::make_index_sequence<order>{});
+    indexSequence(std::make_index_sequence<order>{});
 
-    return View<value_type, NewOrder>{tensor.Data(), new_shape, new_strides, offset};
+    return View<value_type, NewOrder>{tensor.Data(), newShape, newStrides, offset};
 }
 
 /*
