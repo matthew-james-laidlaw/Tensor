@@ -1,11 +1,14 @@
 #pragma once
 
+#include "TensorLike.hpp"
+#include "View.hpp"
+
 #include <array>
 #include <iostream>
 #include <stdexcept>
+#include <tuple>
 #include <variant>
 #include <vector>
-#include <tuple>
 
 struct Range
 {
@@ -19,8 +22,8 @@ constexpr auto CountRangeSlices() -> size_t
     return ((std::same_as<std::decay_t<Slices>, Range> ? 1 : 0) + ...);
 }
 
-template <typename Derived, typename... Slices>
-auto SliceImpl(ITensor<Derived>& tensor, Slices&&... slice_pack)
+template <size_t Order, TensorLike<Order> T, typename... Slices>
+auto SliceImpl(T& tensor, Slices&&... slice_pack)
 {
     // index slices reduce dimensionality by one, range slices preserve it (albeit with a constrained range of elements)
     // thus, the remaining output dimensionality is equivalent to the number of range slices provided
@@ -30,9 +33,9 @@ auto SliceImpl(ITensor<Derived>& tensor, Slices&&... slice_pack)
     // matter for calculating linear indices non-contiguously
 
     size_t offset = 0;
-    if constexpr (std::same_as<std::remove_cvref_t<Derived>, View<typename Derived::ValueType, Derived::kOrder>>)
+    if constexpr (std::same_as<std::remove_cvref_t<T>, View<typename T::ValueType, T::kOrder>>)
     {
-        offset = static_cast<Derived const&>(tensor).Offset();
+        offset = tensor.Offset();
     }
 
     std::array<size_t, NewOrder> new_shape;
@@ -73,7 +76,7 @@ auto SliceImpl(ITensor<Derived>& tensor, Slices&&... slice_pack)
     {
         (process_dimension(std::integral_constant<size_t, I>{}), ...);
     };
-    index_sequence(std::make_index_sequence<Derived::kOrder>{});
+    index_sequence(std::make_index_sequence<T::kOrder>{});
 
-    return View<typename Derived::ValueType, NewOrder>{tensor.Data(), new_shape, new_strides, offset};
+    return View<typename T::ValueType, NewOrder>{tensor.Data(), new_shape, new_strides, offset};
 }

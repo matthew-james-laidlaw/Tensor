@@ -1,18 +1,16 @@
 #pragma once
 
-#include "ITensor.hpp"
-
 #include <iostream>
 
 // Provide an operator<< for std::array to print the shape nicely.
-template <typename T, std::size_t N>
-std::ostream& operator<<(std::ostream& os, std::array<T, N> const& arr)
+template <typename T, size_t Order>
+std::ostream& operator<<(std::ostream& os, std::array<T, Order> const& arr)
 {
     os << "[";
-    for (std::size_t i = 0; i < N; ++i)
+    for (size_t i = 0; i < Order; ++i)
     {
         os << arr[i];
-        if (i + 1 < N)
+        if (i + 1 < Order)
         {
             os << ", ";
         }
@@ -48,23 +46,26 @@ void print_tensor_recursive(std::ostream& out, Tensor const& tensor,
     }
 }
 
-// This operator<< works for any ITensor-derived type that provides a Shape() method
+// This operator<< works for any TensorLike derived type that provides a Shape() method
 // and an operator() that takes a std::array of indices.
-template <typename Derived>
-auto operator<<(std::ostream& out, ITensor<Derived> const& tensor) -> std::ostream&
+template <typename T, size_t Order = T::kOrder>
+    requires TensorLike<T, Order>
+auto operator<<(std::ostream& out, T const& tensor) -> std::ostream&
 {
-    // Cast to the derived type to access its interface.
-    auto const& derived = static_cast<Derived const&>(tensor);
-
+    out << "{" << std::endl;
     // Print shape.
-    auto shape = derived.Shape();
-    out << "Shape: " << shape << "\nData: ";
+    auto shape = tensor.Shape();
+    out << "    Shape = " << shape << std::endl
+        << "    Data = ";
 
     // Create an index array initialized to zero.
-    std::array<size_t, Derived::kOrder> indices{}; // All elements are zero-initialized.
+    std::array<size_t, Order> indices{}; // All elements are zero-initialized.
 
     // Recursively print all tensor elements.
-    print_tensor_recursive(out, derived, shape, indices, 0);
+    print_tensor_recursive(out, tensor, shape, indices, 0);
+
+    out << std::endl
+        << "}" << std::endl;
 
     return out;
 }
