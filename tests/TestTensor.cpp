@@ -2,6 +2,16 @@
 
 #include <Tensor.hpp>
 
+std::string RemoveWhitespace(const std::string& str)
+{
+    std::string out;
+    std::copy_if(str.begin(), str.end(), std::back_inserter(out), [](char c)
+    {
+        return !std::isspace(static_cast<unsigned char>(c));
+    });
+    return out;
+}
+
 TEST(TensorTests, DefaultConstructor)
 {
     size_t height = 2;
@@ -9,12 +19,9 @@ TEST(TensorTests, DefaultConstructor)
 
     auto tensor = Tensor<int, 2>({height, width});
 
-    auto expectedShape = std::array<size_t, 2>{height, width};
-    auto expectedStrides = std::array<size_t, 2>{width, 1};
-
     EXPECT_NE(tensor.Data(), nullptr);
-    EXPECT_EQ(tensor.Shape(), expectedShape);
-    EXPECT_EQ(tensor.Strides(), expectedStrides);
+    EXPECT_EQ(tensor.Shape(), (std::array<size_t, 2>{height, width}));
+    EXPECT_EQ(tensor.Strides(), (std::array<size_t, 2>{width, 1}));
 }
 
 TEST(TensorTests, FillConstructor)
@@ -149,7 +156,7 @@ TEST(TensorTests, SliceRow)
 
     View<int, 1> row = m1.Slice(0, Range{0, 4});
 
-    EXPECT_EQ(row.Shape()[0], 4);
+    EXPECT_EQ(row.Shape(), (std::array<size_t, 1>{4}));
 
     EXPECT_EQ(row({0}), 1);
     EXPECT_EQ(row({1}), 2);
@@ -162,14 +169,14 @@ TEST(TensorTests, SliceCol)
     Tensor<int, 2> m1({4, 4});
     std::iota(m1.Data(), m1.Data() + 16, 1);
 
-    View<int, 1> row = m1.Slice(Range{0, 4}, 0);
+    View<int, 1> col = m1.Slice(Range{0, 4}, 0);
 
-    EXPECT_EQ(row.Shape()[0], 4);
+    EXPECT_EQ(col.Shape(), (std::array<size_t, 1>{4}));
 
-    EXPECT_EQ(row({0}), 1);
-    EXPECT_EQ(row({1}), 5);
-    EXPECT_EQ(row({2}), 9);
-    EXPECT_EQ(row({3}), 13);
+    EXPECT_EQ(col({0}), 1);
+    EXPECT_EQ(col({1}), 5);
+    EXPECT_EQ(col({2}), 9);
+    EXPECT_EQ(col({3}), 13);
 }
 
 TEST(TensorTests, SliceBlock)
@@ -179,8 +186,7 @@ TEST(TensorTests, SliceBlock)
 
     View<int, 2> block = m1.Slice(Range{1, 3}, Range{1, 3});
 
-    EXPECT_EQ(block.Shape()[0], 2);
-    EXPECT_EQ(block.Shape()[1], 2);
+    EXPECT_EQ(block.Shape(), (std::array<size_t, 2>{2, 2}));
 
     EXPECT_EQ(block({0, 0}), 6);
     EXPECT_EQ(block({0, 1}), 7);
@@ -196,19 +202,13 @@ TEST(TensorTests, SlicePlanes)
     View<int, 2> p2 = t1.Slice(1, Range{0, 1}, Range{0, 1});
     View<int, 2> p3 = t1.Slice(2, Range{0, 1}, Range{0, 1});
 
-    EXPECT_EQ(p1.Shape().size(), 2);
-    EXPECT_EQ(p1.Shape()[0], 1);
-    EXPECT_EQ(p1.Shape()[1], 1);
+    EXPECT_EQ(p1.Shape(), (std::array<size_t, 2>{1, 1}));
     EXPECT_EQ(p1({0, 0}), 1);
 
-    EXPECT_EQ(p2.Shape().size(), 2);
-    EXPECT_EQ(p2.Shape()[0], 1);
-    EXPECT_EQ(p2.Shape()[1], 1);
+    EXPECT_EQ(p2.Shape(), (std::array<size_t, 2>{1, 1}));
     EXPECT_EQ(p2({0, 0}), 2);
 
-    EXPECT_EQ(p3.Shape().size(), 2);
-    EXPECT_EQ(p3.Shape()[0], 1);
-    EXPECT_EQ(p3.Shape()[1], 1);
+    EXPECT_EQ(p3.Shape(), (std::array<size_t, 2>{1, 1}));
     EXPECT_EQ(p3({0, 0}), 3);
 }
 
@@ -220,19 +220,13 @@ TEST(TensorTests, SlicePixels)
     View<int, 2> p2 = t1.Slice(Range{0, 1}, Range{0, 1}, 1);
     View<int, 2> p3 = t1.Slice(Range{0, 1}, Range{0, 1}, 2);
 
-    EXPECT_EQ(p1.Shape().size(), 2);
-    EXPECT_EQ(p1.Shape()[0], 1);
-    EXPECT_EQ(p1.Shape()[1], 1);
+    EXPECT_EQ(p1.Shape(), (std::array<size_t, 2>{1, 1}));
     EXPECT_EQ(p1({0, 0}), 1);
 
-    EXPECT_EQ(p2.Shape().size(), 2);
-    EXPECT_EQ(p2.Shape()[0], 1);
-    EXPECT_EQ(p2.Shape()[1], 1);
+    EXPECT_EQ(p2.Shape(), (std::array<size_t, 2>{1, 1}));
     EXPECT_EQ(p2({0, 0}), 2);
 
-    EXPECT_EQ(p3.Shape().size(), 2);
-    EXPECT_EQ(p3.Shape()[0], 1);
-    EXPECT_EQ(p3.Shape()[1], 1);
+    EXPECT_EQ(p3.Shape(), (std::array<size_t, 2>{1, 1}));
     EXPECT_EQ(p3({0, 0}), 3);
 }
 
@@ -253,4 +247,36 @@ TEST(TensorTests, ViewCopyConstructor)
             EXPECT_EQ(t1({y, x}), t2({y, x}));
         }
     }
+}
+
+TEST(TensorTests, PrintTensor)
+{
+    Tensor<int, 2> tensor({3, 2});
+    std::iota(tensor.Data(), tensor.Data() + 6, 1);
+
+    testing::internal::CaptureStdout();
+    std::cout << tensor;
+    std::string captured = testing::internal::GetCapturedStdout();
+
+    std::string actual = RemoveWhitespace(captured);
+    std::string expected = "{Shape=[3,2]Data=[[1,2],[3,4],[5,6]]}";
+
+    EXPECT_EQ(expected, actual);
+}
+
+TEST(TensorTests, PrintView)
+{
+    Tensor<int, 2> tensor({4, 4});
+    std::iota(tensor.Data(), tensor.Data() + 16, 1);
+
+    View<int, 2> view = tensor.Slice(Range{1, 3}, Range{1, 3});
+
+    testing::internal::CaptureStdout();
+    std::cout << view;
+    std::string captured = testing::internal::GetCapturedStdout();
+
+    std::string actual = RemoveWhitespace(captured);
+    std::string expected = "{Shape=[2,2]Data=[[6,7],[10,11]]}";
+
+    EXPECT_EQ(expected, actual);
 }

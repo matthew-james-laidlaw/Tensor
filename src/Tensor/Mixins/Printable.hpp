@@ -3,7 +3,6 @@
 #include <array>
 #include <iostream>
 
-// Provide an operator<< for std::array to print the shape nicely.
 template <typename T, size_t Order>
 std::ostream& operator<<(std::ostream& os, std::array<T, Order> const& arr)
 {
@@ -20,7 +19,6 @@ std::ostream& operator<<(std::ostream& os, std::array<T, Order> const& arr)
     return os;
 }
 
-// A helper function that recursively prints tensor elements
 template <typename T, size_t Order>
 void print_tensor_recursive(std::ostream& out, T const& tensor,
                             std::array<size_t, Order> const& shape,
@@ -28,7 +26,6 @@ void print_tensor_recursive(std::ostream& out, T const& tensor,
 {
     if (dim == Order)
     {
-        // Base case: all indices specified, print one element.
         out << tensor(indices);
     }
     else
@@ -47,41 +44,38 @@ void print_tensor_recursive(std::ostream& out, T const& tensor,
     }
 }
 
-template <typename T, size_t Order>
-auto operator<<(std::ostream& out, T const& tensor) -> std::ostream&
-{
-    out << "{" << std::endl;
-    // Print shape.
-    auto shape = tensor.Shape();
-    out << "    Shape = " << shape << std::endl
-        << "    Data = ";
+// template <typename T, size_t Order>
+// auto operator<<(std::ostream& out, T const& tensor) -> std::ostream&
+// {
+//     out << "{" << std::endl;
 
-    // Create an index array initialized to zero.
-    std::array<size_t, Order> indices{}; // All elements are zero-initialized.
+//     auto shape = tensor.Shape();
+//     out << "    Shape = " << shape << std::endl
+//         << "    Data = ";
 
-    // Recursively print all tensor elements.
-    print_tensor_recursive(out, tensor, shape, indices, 0);
+//     std::array<size_t, Order> indices{};
 
-    out << std::endl
-        << "}" << std::endl;
+//     print_tensor_recursive(out, tensor, shape, indices, 0);
 
-    return out;
-}
+//     out << std::endl
+//         << "}" << std::endl;
 
-// Printable mixin via CRTP.
-// Derived classes must implement:
-//   - Shape() returning std::array<size_t, Order>
-//   - operator()(std::array<size_t, Order> const&) for element access.
-template <typename Derived, size_t Order>
+//     return out;
+// }
+
+template <typename Derived>
 struct Printable
 {
+
+    static constexpr size_t order = TensorTraits<Derived>::order;
+
     friend std::ostream& operator<<(std::ostream& out, Derived const& tensor)
     {
         out << "{" << std::endl;
         auto shape = tensor.Shape();
         out << "    Shape = " << shape << std::endl;
         out << "    Data = ";
-        std::array<size_t, Order> indices{}; // Zero-initialized index array.
+        std::array<size_t, order> indices{};
         print_tensor_recursive(out, tensor, shape, indices, 0);
         out << std::endl
             << "}" << std::endl;

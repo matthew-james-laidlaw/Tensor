@@ -5,8 +5,8 @@
 #include "../Mixins/Sliceable.hpp"
 
 template <typename T, size_t Order>
-class View : public OffsetIndexable<View<T, Order>, T, Order>,
-             public Printable<View<T, Order>, Order>,
+class View : public Indexable<View<T, Order>>,
+             public Printable<View<T, Order>>,
              public Sliceable<View<T, Order>, Order>
 {
 private:
@@ -17,9 +17,6 @@ private:
     T* mData;
 
 public:
-
-    using ValueType = T;
-    static constexpr size_t kOrder = Order;
 
     View(T* data, std::array<size_t, Order> const& shape, std::array<size_t, Order> const& strides, size_t offset)
         : mShape(shape)

@@ -10,8 +10,8 @@
 #include <memory>
 
 template <typename T, size_t Order>
-class Tensor : public DirectIndexable<Tensor<T, Order>, T, Order>,
-               public Printable<Tensor<T, Order>, Order>,
+class Tensor : public Indexable<Tensor<T, Order>>,
+               public Printable<Tensor<T, Order>>,
                public Sliceable<Tensor<T, Order>, Order>
 {
 private:
@@ -22,9 +22,6 @@ private:
     std::unique_ptr<T[]> mData;
 
 public:
-
-    using ValueType = T;
-    static constexpr size_t kOrder = Order;
 
     Tensor(std::array<size_t, Order> const& shape)
         : mShape(shape)

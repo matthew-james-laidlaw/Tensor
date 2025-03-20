@@ -1,13 +1,13 @@
 #pragma once
 
+#include "../Containers/Forward.hpp"
+#include "../Containers/Traits.hpp"
+
 #include <array>
 #include <concepts>
 #include <numeric>
 #include <tuple>
 #include <utility>
-
-template <typename T, size_t Order>
-class View;
 
 struct Range
 {
@@ -21,16 +21,19 @@ constexpr auto CountRangeSlices() -> size_t
     return ((std::same_as<std::decay_t<Slices>, Range> ? 1 : 0) + ...);
 }
 
-// Here we require that T satisfies TensorLike<T, Order>
-template <typename T, size_t Order, typename... Slices>
+template <typename T, typename... Slices>
 auto SliceImpl(T& tensor, Slices&&... slice_pack)
 {
+    using value_type = TensorTraits<T>::value_type;
+    static constexpr size_t order = TensorTraits<T>::order;
+    static constexpr bool has_offset = TensorTraits<T>::has_offset;
+
     // The new tensor order is the number of Range slices.
     constexpr size_t NewOrder = CountRangeSlices<Slices...>();
 
     // Calculate the offset. If the tensor is already a View, use its offset.
     size_t offset = 0;
-    if constexpr (std::same_as<std::remove_cvref_t<T>, View<typename T::ValueType, T::kOrder>>)
+    if constexpr (has_offset)
     {
         offset = tensor.Offset();
     }
@@ -67,9 +70,9 @@ auto SliceImpl(T& tensor, Slices&&... slice_pack)
     {
         (process_dimension(std::integral_constant<size_t, I>{}), ...);
     };
-    index_sequence(std::make_index_sequence<T::kOrder>{});
+    index_sequence(std::make_index_sequence<order>{});
 
-    return View<typename T::ValueType, NewOrder>{tensor.Data(), new_shape, new_strides, offset};
+    return View<value_type, NewOrder>{tensor.Data(), new_shape, new_strides, offset};
 }
 
 template <typename Derived, size_t Order>
@@ -81,6 +84,6 @@ public:
     auto Slice(Slices&&... slices)
     {
         auto& self = static_cast<Derived&>(*this);
-        return SliceImpl<Derived, Order>(self, std::forward<Slices>(slices)...);
+        return SliceImpl<Derived>(self, std::forward<Slices>(slices)...);
     }
 };

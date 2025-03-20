@@ -12,6 +12,8 @@
 template <typename T1, typename T2, size_t Order>
 void CopyElementwise(const T1& source, T2& destination)
 {
+    using value_type = TensorTraits<T2>::value_type;
+
     Expect(source.Shape() == destination.Shape());
     std::array<size_t, Order> currentIndices{};
 
@@ -19,7 +21,7 @@ void CopyElementwise(const T1& source, T2& destination)
     {
         if (currentDimension == Order) // base case
         {
-            destination(currentIndices) = static_cast<typename T2::ValueType>(source(currentIndices));
+            destination(currentIndices) = static_cast<value_type>(source(currentIndices));
         }
         else // recursive case
         {
