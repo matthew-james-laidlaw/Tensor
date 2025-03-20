@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <numeric>
 
 template <typename Derived, size_t Order>
