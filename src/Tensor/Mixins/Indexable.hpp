@@ -6,6 +6,10 @@
 #include <cstddef>
 #include <numeric>
 
+/*
+ * Indexable mixin for tensor-like classes.
+ * Provides multidimensional indexing operator().
+ */
 template <typename Derived>
 class Indexable
 {

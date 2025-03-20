@@ -75,6 +75,10 @@ auto SliceImpl(T& tensor, Slices&&... slice_pack)
     return View<value_type, NewOrder>{tensor.Data(), new_shape, new_strides, offset};
 }
 
+/*
+ * Sliceable mixin for tensor-like classes.
+ * Provides multidimensional slicing via the Slice() function.
+ */
 template <typename Derived, size_t Order>
 class Sliceable
 {
