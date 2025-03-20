@@ -4,120 +4,140 @@
 
 TEST(TensorTests, DefaultConstructor)
 {
-    Tensor<int, 2> m1({4, 2});
+    size_t height = 2;
+    size_t width = 3;
 
-    EXPECT_EQ(m1.Shape().size(), 2);
-    EXPECT_EQ(m1.Shape()[0], 4);
-    EXPECT_EQ(m1.Shape()[1], 2);
+    auto tensor = Tensor<int, 2>({height, width});
 
-    EXPECT_EQ(m1.Strides().size(), 2);
-    EXPECT_EQ(m1.Strides()[0], 2);
-    EXPECT_EQ(m1.Strides()[1], 1);
+    auto expectedShape = std::array<size_t, 2>{height, width};
+    auto expectedStrides = std::array<size_t, 2>{width, 1};
+
+    EXPECT_NE(tensor.Data(), nullptr);
+    EXPECT_EQ(tensor.Shape(), expectedShape);
+    EXPECT_EQ(tensor.Strides(), expectedStrides);
 }
 
 TEST(TensorTests, FillConstructor)
 {
-    Tensor<int, 2> m1({4, 2}, 42);
+    size_t height = 2;
+    size_t width = 3;
 
-    for (size_t y = 0; y < m1.Shape()[0]; ++y)
+    int fill = 42;
+
+    auto tensor = Tensor<int, 2>({height, width}, fill);
+
+    for (size_t y = 0; y < height; ++y)
     {
-        for (size_t x = 0; x < m1.Shape()[1]; ++x)
+        for (size_t x = 0; x < width; ++x)
         {
-            EXPECT_EQ(m1({y, x}), 42);
+            EXPECT_EQ(tensor({y, x}), fill);
         }
     }
 }
 
 TEST(TensorTests, CopyConstructor)
 {
-    Tensor<int, 2> m1({4, 2}, 42);
-    Tensor<int, 2> m2(m1);
+    size_t height = 2;
+    size_t width = 3;
 
-    EXPECT_EQ(m2.Shape().size(), 2);
-    EXPECT_EQ(m2.Shape()[0], 4);
-    EXPECT_EQ(m2.Shape()[1], 2);
+    int fill = 42;
 
-    EXPECT_EQ(m2.Strides().size(), 2);
-    EXPECT_EQ(m2.Strides()[0], 2);
-    EXPECT_EQ(m2.Strides()[1], 1);
+    auto t1 = Tensor<int, 2>({height, width}, fill);
+    auto t2(t1);
 
-    for (size_t y = 0; y < m1.Shape()[0]; ++y)
+    EXPECT_NE(t1.Data(), nullptr);
+    EXPECT_NE(t2.Data(), nullptr);
+
+    for (size_t y = 0; y < height; ++y)
     {
-        for (size_t x = 0; x < m1.Shape()[1]; ++x)
+        for (size_t x = 0; x < width; ++x)
         {
-            EXPECT_EQ(m1({y, x}), 42);
-            EXPECT_EQ(m2({y, x}), 42);
+            EXPECT_EQ(t1({y, x}), t2({y, x}));
         }
     }
 }
 
 TEST(TensorTests, MoveConstructor)
 {
-    Tensor<int, 2> m1({4, 2}, 42);
-    Tensor<int, 2> m2(std::move(m1));
+    size_t height = 2;
+    size_t width = 3;
 
-    EXPECT_EQ(m2.Shape().size(), 2);
-    EXPECT_EQ(m2.Shape()[0], 4);
-    EXPECT_EQ(m2.Shape()[1], 2);
+    int fill = 42;
 
-    EXPECT_EQ(m2.Strides().size(), 2);
-    EXPECT_EQ(m2.Strides()[0], 2);
-    EXPECT_EQ(m2.Strides()[1], 1);
+    auto t1 = Tensor<int, 2>({height, width}, fill);
+    auto t2(std::move(t1));
 
-    EXPECT_EQ(m1.Data(), nullptr);
+    EXPECT_EQ(t1.Data(), nullptr);
+    EXPECT_NE(t2.Data(), nullptr);
 
-    for (size_t y = 0; y < m1.Shape()[0]; ++y)
+    for (size_t y = 0; y < height; ++y)
     {
-        for (size_t x = 0; x < m1.Shape()[1]; ++x)
+        for (size_t x = 0; x < width; ++x)
         {
-            EXPECT_EQ(m2({y, x}), 42);
+            EXPECT_EQ(t2({y, x}), fill);
         }
     }
 }
 
 TEST(TensorTests, CopyAssignment)
 {
-    Tensor<int, 2> m1({4, 2}, 42);
-    Tensor<int, 2> m2 = m1;
+    size_t height = 2;
+    size_t width = 3;
 
-    EXPECT_EQ(m2.Shape().size(), 2);
-    EXPECT_EQ(m2.Shape()[0], 4);
-    EXPECT_EQ(m2.Shape()[1], 2);
+    int fill = 42;
 
-    EXPECT_EQ(m2.Strides().size(), 2);
-    EXPECT_EQ(m2.Strides()[0], 2);
-    EXPECT_EQ(m2.Strides()[1], 1);
+    auto t1 = Tensor<int, 2>({height, width}, fill);
+    auto t2 = t1;
 
-    for (size_t y = 0; y < m1.Shape()[0]; ++y)
+    EXPECT_NE(t1.Data(), nullptr);
+    EXPECT_NE(t2.Data(), nullptr);
+
+    for (size_t y = 0; y < height; ++y)
     {
-        for (size_t x = 0; x < m1.Shape()[1]; ++x)
+        for (size_t x = 0; x < width; ++x)
         {
-            EXPECT_EQ(m1({y, x}), 42);
-            EXPECT_EQ(m2({y, x}), 42);
+            EXPECT_EQ(t1({y, x}), t2({y, x}));
         }
     }
 }
 
 TEST(TensorTests, MoveAssignment)
 {
-    Tensor<int, 2> m1({4, 2}, 42);
-    Tensor<int, 2> m2 = std::move(m1);
+    size_t height = 2;
+    size_t width = 3;
 
-    EXPECT_EQ(m2.Shape().size(), 2);
-    EXPECT_EQ(m2.Shape()[0], 4);
-    EXPECT_EQ(m2.Shape()[1], 2);
+    int fill = 42;
 
-    EXPECT_EQ(m2.Strides().size(), 2);
-    EXPECT_EQ(m2.Strides()[0], 2);
-    EXPECT_EQ(m2.Strides()[1], 1);
+    auto t1 = Tensor<int, 2>({height, width}, fill);
+    auto t2 = std::move(t1);
 
-    EXPECT_EQ(m1.Data(), nullptr);
+    EXPECT_EQ(t1.Data(), nullptr);
+    EXPECT_NE(t2.Data(), nullptr);
 
-    for (size_t y = 0; y < m1.Shape()[0]; ++y)
+    for (size_t y = 0; y < height; ++y)
     {
-        for (size_t x = 0; x < m1.Shape()[1]; ++x)
+        for (size_t x = 0; x < width; ++x)
         {
-            EXPECT_EQ(m2({y, x}), 42);
+            EXPECT_EQ(t2({y, x}), fill);
+        }
+    }
+}
+
+TEST(TensorTests, Indexing)
+{
+    size_t height = 2;
+    size_t width = 3;
+
+    auto tensor = Tensor<int, 2>({height, width});
+
+    size_t size = height * width;
+    std::iota(tensor.Data(), tensor.Data() + size, 0);
+
+    for (size_t y = 0; y < height; ++y)
+    {
+        for (size_t x = 0; x < width; ++x)
+        {
+            EXPECT_EQ(tensor({y, x}), y * width + x);
         }
     }
 }
