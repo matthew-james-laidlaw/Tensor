@@ -6,6 +6,7 @@
 #include "../Utilities/Copy.hpp"
 #include "../Utilities/Shape.hpp"
 
+#include <algorithm>
 #include <memory>
 
 template <typename T, size_t Order>
