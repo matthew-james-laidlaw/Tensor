@@ -128,3 +128,24 @@ int main()
 - Pretty printing
 
 For more details, refer to the source code and examples provided in the repository.
+
+```
+Matrix:
+{
+    Shape = [4, 4]
+    Data = [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11], [12, 13, 14, 15]]
+}
+
+Element at (2, 3): 11
+
+Row slice (1, [1, 3)): {
+    Shape = [2]
+    Data = [5, 6]
+}
+
+Block slice ([1, 3), [2, 4)):
+{
+    Shape = [2, 2]
+    Data = [[6, 7], [10, 11]]
+}
+```
