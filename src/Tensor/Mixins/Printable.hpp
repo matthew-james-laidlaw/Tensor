@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <iostream>
 
 // Provide an operator<< for std::array to print the shape nicely.
@@ -20,8 +21,8 @@ std::ostream& operator<<(std::ostream& os, std::array<T, Order> const& arr)
 }
 
 // A helper function that recursively prints tensor elements
-template <typename Tensor, size_t Order>
-void print_tensor_recursive(std::ostream& out, Tensor const& tensor,
+template <typename T, size_t Order>
+void print_tensor_recursive(std::ostream& out, T const& tensor,
                             std::array<size_t, Order> const& shape,
                             std::array<size_t, Order>& indices, size_t dim)
 {
@@ -46,10 +47,7 @@ void print_tensor_recursive(std::ostream& out, Tensor const& tensor,
     }
 }
 
-// This operator<< works for any TensorLike derived type that provides a Shape() method
-// and an operator() that takes a std::array of indices.
-template <typename T, size_t Order = T::kOrder>
-    requires TensorLike<T, Order>
+template <typename T, size_t Order>
 auto operator<<(std::ostream& out, T const& tensor) -> std::ostream&
 {
     out << "{" << std::endl;
@@ -69,3 +67,24 @@ auto operator<<(std::ostream& out, T const& tensor) -> std::ostream&
 
     return out;
 }
+
+// Printable mixin via CRTP.
+// Derived classes must implement:
+//   - Shape() returning std::array<size_t, Order>
+//   - operator()(std::array<size_t, Order> const&) for element access.
+template <typename Derived, size_t Order>
+struct Printable
+{
+    friend std::ostream& operator<<(std::ostream& out, Derived const& tensor)
+    {
+        out << "{" << std::endl;
+        auto shape = tensor.Shape();
+        out << "    Shape = " << shape << std::endl;
+        out << "    Data = ";
+        std::array<size_t, Order> indices{}; // Zero-initialized index array.
+        print_tensor_recursive(out, tensor, shape, indices, 0);
+        out << std::endl
+            << "}" << std::endl;
+        return out;
+    }
+};

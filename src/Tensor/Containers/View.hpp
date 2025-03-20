@@ -1,9 +1,13 @@
 #pragma once
 
-#include "TensorLike.hpp"
+#include "../Mixins/Indexable.hpp"
+#include "../Mixins/Printable.hpp"
+#include "../Mixins/Sliceable.hpp"
 
 template <typename T, size_t Order>
-class View
+class View : public OffsetIndexable<View<T, Order>, T, Order>,
+             public Printable<View<T, Order>, Order>,
+             public Sliceable<View<T, Order>, Order>
 {
 private:
 
@@ -44,20 +48,8 @@ public:
         return mStrides;
     }
 
-    auto operator()(std::array<size_t, Order> const& indices) -> T&
+    inline auto Offset() const -> size_t
     {
-        return mData[GetLinearIndex(indices)];
-    }
-
-    auto operator()(std::array<size_t, Order> const& indices) const -> T
-    {
-        return mData[GetLinearIndex(indices)];
-    }
-
-private:
-
-    inline auto GetLinearIndex(std::array<size_t, Order> const& indices) const -> size_t
-    {
-        return std::inner_product(indices.begin(), indices.end(), mStrides.begin(), static_cast<size_t>(0));
+        return mOffset;
     }
 };

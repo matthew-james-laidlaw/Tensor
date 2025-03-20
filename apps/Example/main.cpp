@@ -2,6 +2,8 @@
 
 #include <numeric>
 
+#include <iostream>
+
 int main() {
   Tensor<int, 2> matrix({4, 4});
   std::iota(matrix.Data(), matrix.Data() + 16, 0);

@@ -1,12 +1,17 @@
 #pragma once
 
-#include "TensorLike.hpp"
+#include "../Mixins/Indexable.hpp"
+#include "../Mixins/Printable.hpp"
+#include "../Mixins/Sliceable.hpp"
+#include "../Utilities/Copy.hpp"
+#include "../Utilities/Shape.hpp"
 
 #include <memory>
-#include <numeric>
 
 template <typename T, size_t Order>
-class Tensor
+class Tensor : public DirectIndexable<Tensor<T, Order>, T, Order>,
+               public Printable<Tensor<T, Order>, Order>,
+               public Sliceable<Tensor<T, Order>, Order>
 {
 private:
 
@@ -72,7 +77,6 @@ public:
     }
 
     template <typename Other>
-        requires TensorLike<Other, Order> && std::convertible_to<typename Other::ValueType, ValueType>
     Tensor(Other const& other)
         : Tensor(other.Shape())
     {
@@ -97,22 +101,5 @@ public:
     auto Strides() const -> std::array<size_t, Order>
     {
         return mStrides;
-    }
-
-    auto operator()(std::array<size_t, Order> const& indices) -> T&
-    {
-        return mData[GetLinearIndex(indices)];
-    }
-
-    auto operator()(std::array<size_t, Order> const& indices) const -> T
-    {
-        return mData[GetLinearIndex(indices)];
-    }
-
-private:
-
-    inline auto GetLinearIndex(std::array<size_t, Order> const& indices) const -> size_t
-    {
-        return std::inner_product(indices.begin(), indices.end(), mStrides.begin(), static_cast<size_t>(0));
     }
 };
