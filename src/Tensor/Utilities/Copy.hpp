@@ -7,7 +7,7 @@
 /*
  * Copy the contents of the source container into the destination container, element-by-element.
  * For use when one of the containers is non-contiguous, and memory can't be copied directly.
- * Recursively visits ever permutation of indices allowable for the given shape.
+ * Recursively visits every permutation of indices allowable for the given shape.
  */
 template <typename T1, typename T2, size_t Order>
 void CopyElementwise(const T1& source, T2& destination)
