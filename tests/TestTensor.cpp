@@ -215,3 +215,22 @@ TEST(TensorTests, SlicePixels)
     EXPECT_EQ(p3.Shape()[1], 1);
     EXPECT_EQ(p3({0, 0}), 3);
 }
+
+TEST(TensorTests, ViewCopyConstructor)
+{
+    Tensor<int, 2> t1({2, 2}, 42);
+    View<int, 2> v1 = t1.Slice(Range{0, 2}, Range{0, 2});
+    Tensor<int, 2> t2(v1);
+
+    EXPECT_EQ(t1.Data(), v1.Data());
+    EXPECT_NE(t1.Data(), t2.Data());
+
+    for (size_t y = 0; y < 2; ++y)
+    {
+        for (size_t x = 0; x < 2; ++x)
+        {
+            EXPECT_EQ(t1({y, x}), v1({y, x}));
+            EXPECT_EQ(t1({y, x}), t2({y, x}));
+        }
+    }
+}
