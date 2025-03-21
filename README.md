@@ -1,5 +1,5 @@
 # Tensor
-
+[![unit](https://github.com/matthew-james-laidlaw/Tensor/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/matthew-james-laidlaw/Tensor/actions/workflows/test.yml)
 ### (See [user guide](./docs/user-guide.md) for detailed usage instructions).
 
 Tensor is a C++ library for N-dimensional tensor operations, including indexing, slicing, and parallel computation. Designed as a template-header library which can be integrated into a project via Git submodules and CMake.
